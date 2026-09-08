@@ -1,0 +1,7 @@
+cluster,segment_name,customer_count,avg_recency,avg_frequency,avg_monetary
+0,Khách hàng có nguy cơ rời bỏ,20815,458.0,1.0,133.55
+1,Khách hàng mua lặp lại,2545,221.51,2.0,271.95
+2,Khách hàng thông thường,33449,254.64,1.0,132.0
+3,Khách hàng chi tiêu cao,2368,237.06,1.01,1169.26
+4,Khách hàng mua thường xuyên,228,201.79,3.4,506.03
+5,Khách hàng hoạt động gần đây,33953,86.85,1.0,136.91
