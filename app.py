@@ -134,27 +134,26 @@ with tab1:
     st.plotly_chart(fig_pie, use_container_width=True)
 
   else:
-    # GIAO DIỆN KHI CHỌN 1 PHÂN KHÚC CỤ THỂ (Không hiện Tổng quan)
+    # GIAO DIỆN KHI CHỌN 1 PHÂN KHÚC CỤ THỂ
     seg_info = filtered_df.iloc[0]
     seg_count = seg_info["customer_count"]
     seg_rank = seg_info["rank"]
     seg_pct = (seg_count / TOTAL_CUSTOMERS) * 100
 
-    # Hiển thị 3 chỉ số riêng biệt cho phân khúc được chọn
+    # Hiển thị 3 chỉ số (Thứ hạng chỉ hiển thị con số)
     c1, c2, c3 = st.columns(3)
     c1.metric("Số lượng khách hàng", f"{seg_count:,}")
     c2.metric("Tỷ trọng so với toàn bộ", f"{seg_pct:.2f}%")
-    c3.metric("Thứ hạng quy mô", f"Đứng thứ {seg_rank} / 6")
+    c3.metric("Thứ hạng quy mô", f"{seg_rank}")
 
     st.divider()
 
-    # Tạo dữ liệu biểu đồ tròn 2 phần: Phân khúc chọn (Màu Xanh) vs Các phân khúc còn lại (Màu Vàng)
+    # Biểu đồ tròn 2 phần: Phân khúc chọn (Màu Xanh) vs Các phân khúc còn lại (Màu Vàng)
     pie_data = pd.DataFrame({
         "Phân loại": [selected_segment, "Các phân khúc còn lại"],
         "Số lượng": [seg_count, TOTAL_CUSTOMERS - seg_count],
     })
 
-    # Đặt màu cố định: Xanh dương cho phân khúc chọn, Vàng cho phần còn lại
     custom_colors = {
         selected_segment: "#1F77B4",  # Xanh dương
         "Các phân khúc còn lại": "#FFD700",  # Vàng
@@ -228,8 +227,8 @@ with tab2:
 
 # --- TAB 3: ĐỀ XUẤT MARKETING ---
 with tab3:
-  st.subheader("🎯 Kịch Bản Hành Động Chi Tiết")
+  st.subheader("🎯 Kịch Bản Hành Động ")
   for segment, action in MARKETING_ACTION.items():
     if selected_segment == "Tất cả" or selected_segment == segment:
-      with st.expander(f"📌 Phân khúc: **{segment}**", expanded=True):
-        st.write(f"👉 **Hành động đề xuất:** {action}")
+      with st.expander(f" Phân khúc: **{segment}**", expanded=True):
+        st.write(f" **Hành động đề xuất:** {action}")
