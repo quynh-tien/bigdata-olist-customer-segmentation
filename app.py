@@ -2,9 +2,9 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-# 1. Cấu hình trang (bắt buộc đặt ở dòng đầu tiên)
+# 1. Cấu hình trang
 st.set_page_config(
-    page_title="Big Data Customer Segmentation", page_icon="📊", layout="wide"
+    page_title="Phân khúc khách hàng", page_icon="📊", layout="wide"
 )
 
 # 2. Khởi tạo dữ liệu tổng hợp 6 phân khúc
@@ -83,7 +83,7 @@ else:
   filtered_df = df_summary
 
 # 6. Tiêu đề và Các Tabs giao diện
-st.title("📊 Phân Khúc Khách Hàng Thương Mại Điện Tử (Big Data)")
+st.title("📊 Phân khúc khách hàng")
 
 tab1, tab2, tab3 = st.tabs([
     "📈 Tổng Quan KPI",
@@ -96,10 +96,22 @@ with tab1:
   c1, c2, c3 = st.columns(3)
   c1.metric("Tổng số khách hàng", f"{filtered_df['customer_count'].sum():,}")
   c2.metric("Số phân khúc", "6" if selected_segment == "Tất cả" else "1")
-  c3.metric(
-      "Phân khúc lớn nhất",
-      f"{df_summary.loc[df_summary['customer_count'].idxmax()]['segment_name']}",
-  )
+
+  # Tùy chỉnh hiển thị Phân khúc lớn nhất với cỡ chữ nhỏ vừa vặn
+  largest_seg = df_summary.loc[df_summary["customer_count"].idxmax()][
+      "segment_name"
+  ]
+  with c3:
+    st.markdown(
+        "<p style='font-size: 14px; color: #31333F; opacity: 0.8; margin-bottom:"
+        " 0px;'>Phân khúc lớn nhất</p>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        f"<p style='font-size: 20px; font-weight: 600; color: #31333F;"
+        f" margin-top: 4px;'>{largest_seg}</p>",
+        unsafe_allow_html=True,
+    )
 
   st.divider()
 
