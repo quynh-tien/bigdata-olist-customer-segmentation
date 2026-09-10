@@ -2,7 +2,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-# 1. Cấu hình trang
+# 1. Cấu hình trang (bắt buộc đặt ở dòng đầu tiên)
 st.set_page_config(
     page_title="Phân khúc khách hàng", page_icon="📊", layout="wide"
 )
@@ -25,7 +25,13 @@ data = {
 }
 df_summary = pd.DataFrame(data)
 
-# 3. Bảng màu đồng bộ cho 6 phân khúc
+# Tính tổng số KH toàn hệ thống & Thứ hạng từng phân khúc (1 đến 6)
+TOTAL_CUSTOMERS = df_summary["customer_count"].sum()
+df_summary["rank"] = (
+    df_summary["customer_count"].rank(ascending=False, method="min").astype(int)
+)
+
+# 3. Bảng màu đồng bộ cho 6 phân khúc khi chọn "Tất cả"
 COLOR_MAP = {
     "Khách hàng chi tiêu cao": "#FFD700",  # Vàng VIP
     "Khách hàng mua thường xuyên": "#2CA02C",  # Xanh lá
@@ -91,40 +97,85 @@ tab1, tab2, tab3 = st.tabs([
     "💡 Đề Xuất Chiến Lược",
 ])
 
-# --- TAB 1: TỔNG QUAN ---
+# --- TAB 1: TỔNG QUAN / CHI TIẾT THEO PHÂN KHÚC ---
 with tab1:
-  c1, c2, c3 = st.columns(3)
-  c1.metric("Tổng số khách hàng", f"{filtered_df['customer_count'].sum():,}")
-  c2.metric("Số phân khúc", "6" if selected_segment == "Tất cả" else "1")
+  if selected_segment == "Tất cả":
+    # GIAO DIỆN TỔNG QUAN (Chỉ hiện khi chọn "Tất cả")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Tổng số khách hàng", f"{TOTAL_CUSTOMERS:,}")
+    c2.metric("Số phân khúc", "6")
 
-  # Tùy chỉnh hiển thị Phân khúc lớn nhất với cỡ chữ nhỏ vừa vặn
-  largest_seg = df_summary.loc[df_summary["customer_count"].idxmax()][
-      "segment_name"
-  ]
-  with c3:
-    st.markdown(
-        "<p style='font-size: 14px; color: #31333F; opacity: 0.8; margin-bottom:"
-        " 0px;'>Phân khúc lớn nhất</p>",
-        unsafe_allow_html=True,
+    largest_seg = df_summary.loc[df_summary["customer_count"].idxmax()][
+        "segment_name"
+    ]
+    with c3:
+      st.markdown(
+          "<p style='font-size: 14px; color: #31333F; opacity: 0.8;"
+          " margin-bottom: 0px;'>Phân khúc lớn nhất</p>",
+          unsafe_allow_html=True,
+      )
+      st.markdown(
+          f"<p style='font-size: 20px; font-weight: 600; color: #31333F;"
+          f" margin-top: 4px;'>{largest_seg}</p>",
+          unsafe_allow_html=True,
+      )
+
+    st.divider()
+
+    fig_pie = px.pie(
+        df_summary,
+        names="segment_name",
+        values="customer_count",
+        title="Tỷ trọng khách hàng theo 6 Phân khúc",
+        color="segment_name",
+        color_discrete_map=COLOR_MAP,
+        hole=0.4,
     )
-    st.markdown(
-        f"<p style='font-size: 20px; font-weight: 600; color: #31333F;"
-        f" margin-top: 4px;'>{largest_seg}</p>",
-        unsafe_allow_html=True,
+    st.plotly_chart(fig_pie, use_container_width=True)
+
+  else:
+    # GIAO DIỆN KHI CHỌN 1 PHÂN KHÚC CỤ THỂ (Không hiện Tổng quan)
+    seg_info = filtered_df.iloc[0]
+    seg_count = seg_info["customer_count"]
+    seg_rank = seg_info["rank"]
+    seg_pct = (seg_count / TOTAL_CUSTOMERS) * 100
+
+    # Hiển thị 3 chỉ số riêng biệt cho phân khúc được chọn
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Số lượng khách hàng", f"{seg_count:,}")
+    c2.metric("Tỷ trọng so với toàn bộ", f"{seg_pct:.2f}%")
+    c3.metric("Thứ hạng quy mô", f"Đứng thứ {seg_rank} / 6")
+
+    st.divider()
+
+    # Tạo dữ liệu biểu đồ tròn 2 phần: Phân khúc chọn (Màu Xanh) vs Các phân khúc còn lại (Màu Vàng)
+    pie_data = pd.DataFrame({
+        "Phân loại": [selected_segment, "Các phân khúc còn lại"],
+        "Số lượng": [seg_count, TOTAL_CUSTOMERS - seg_count],
+    })
+
+    # Đặt màu cố định: Xanh dương cho phân khúc chọn, Vàng cho phần còn lại
+    custom_colors = {
+        selected_segment: "#1F77B4",  # Xanh dương
+        "Các phân khúc còn lại": "#FFD700",  # Vàng
+    }
+
+    fig_pie = px.pie(
+        pie_data,
+        names="Phân loại",
+        values="Số lượng",
+        title=(
+            f"Tỷ trọng phân khúc '{selected_segment}' so với Tổng hệ thống"
+        ),
+        color="Phân loại",
+        color_discrete_map=custom_colors,
+        hole=0.4,
     )
-
-  st.divider()
-
-  fig_pie = px.pie(
-      filtered_df,
-      names="segment_name",
-      values="customer_count",
-      title="Tỷ trọng khách hàng theo Phân khúc",
-      color="segment_name",
-      color_discrete_map=COLOR_MAP,
-      hole=0.4,
-  )
-  st.plotly_chart(fig_pie, use_container_width=True)
+    fig_pie.update_traces(
+        textinfo="percent+label",
+        hovertemplate="%{label}: %{value:,} KH (%{percent})",
+    )
+    st.plotly_chart(fig_pie, use_container_width=True)
 
 # --- TAB 2: CHI TIẾT RFM ---
 with tab2:
@@ -138,7 +189,7 @@ with tab2:
         x="segment_name",
         y="avg_recency",
         color="segment_name",
-        color_discrete_map=COLOR_MAP,
+        color_discrete_map=COLOR_MAP if selected_segment == "Tất cả" else None,
         title="Recency Trung Bình (Ngày)",
         text_auto=".1f",
     )
@@ -151,7 +202,7 @@ with tab2:
         x="segment_name",
         y="avg_frequency",
         color="segment_name",
-        color_discrete_map=COLOR_MAP,
+        color_discrete_map=COLOR_MAP if selected_segment == "Tất cả" else None,
         title="Frequency Trung Bình (Lần)",
         text_auto=".2f",
     )
@@ -164,7 +215,7 @@ with tab2:
         x="segment_name",
         y="avg_monetary",
         color="segment_name",
-        color_discrete_map=COLOR_MAP,
+        color_discrete_map=COLOR_MAP if selected_segment == "Tất cả" else None,
         title="Monetary Trung Bình (R$)",
         text_auto=".2f",
     )
